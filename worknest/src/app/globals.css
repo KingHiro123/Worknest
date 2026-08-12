@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Surfaces */
+  --color-bg: #fbf7f4;
+  --color-surface: #ffffff;
+
+  /* Borders */
+  --color-line: #e7e2da;
+  --color-line-soft: #f0ebe4;
+  --color-line-faint: #f7f4ef;
+
+  /* Text */
+  --color-ink: #282b2b;
+  --color-ink-soft: #4a4842;
+  --color-muted: #777366;
+  --color-faint: #a5a093;
+
+  /* Brand / accent (primary actions, active nav, links) */
+  --color-accent: #8a7cff;
+  --color-accent-strong: #6f5fe8;
+  --color-accent-hover: #5544d6;
+  --color-accent-soft: #efedff;
+  --color-accent-soft-line: #dad4fb;
+
+  /* Avatar / "Projects" workspace */
+  --color-avatar: #d98c6c;
+
+  /* Status: Low priority / "School" workspace / Done column */
+  --color-green: #76a55a;
+  --color-green-strong: #5e8b45;
+  --color-green-soft: #eaf2e4;
+  --color-green-line: #dce8d4;
+
+  /* Status: Medium priority / "Personal" workspace / Doing column */
+  --color-amber: #e5a441;
+  --color-amber-strong: #b47c22;
+  --color-amber-soft: #fcf1de;
+  --color-amber-line: #f0e4cf;
+
+  /* Status: High priority / "Projects" workspace / destructive actions */
+  --color-terracotta: #d98c6c;
+  --color-terracotta-strong: #c4714c;
+  --color-terracotta-soft: #fbeae3;
+  --color-terracotta-line: #e9c4b5;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
