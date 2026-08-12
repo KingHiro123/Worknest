@@ -10,8 +10,10 @@ import {
   GearIcon,
   NotesIcon,
   TemplatesIcon,
+  XIcon,
   type IconProps,
 } from "@/components/ui/icons";
+import { useSidebar } from "@/components/layout/SidebarContext";
 import { workspaces } from "@/lib/data";
 
 const NAV_ITEMS: { label: string; href: string; icon: (props: IconProps) => React.ReactElement }[] = [
@@ -28,14 +30,35 @@ export interface SidebarProps {
 
 export function Sidebar({ workspaceName = "Studio Admin" }: SidebarProps) {
   const pathname = usePathname();
+  const { open, close } = useSidebar();
 
   return (
-    <aside className="flex h-full w-52 flex-none flex-col border-r border-line bg-surface p-3">
+    <>
+      {open && (
+        <div
+          role="presentation"
+          onClick={close}
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+        />
+      )}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-52 flex-none flex-col border-r border-line bg-surface p-3 transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
       <div className="flex items-center gap-2 px-1 pb-4">
         <div className="flex h-5.5 w-5.5 flex-none items-center justify-center rounded-md bg-accent">
           <div className="h-2 w-2 rounded-tl-xs rounded-tr-md rounded-bl-md rounded-br-xs bg-white" />
         </div>
-        <span className="text-[15px] font-bold tracking-tight text-accent-strong">Worknest</span>
+        <span className="flex-1 text-[15px] font-bold tracking-tight text-accent-strong">Worknest</span>
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close menu"
+          className="flex-none text-muted md:hidden"
+        >
+          <XIcon size={16} />
+        </button>
       </div>
 
       <button
@@ -85,6 +108,7 @@ export function Sidebar({ workspaceName = "Studio Admin" }: SidebarProps) {
         <GearIcon className={pathname === "/settings" ? "text-accent" : undefined} />
         Settings
       </Link>
-    </aside>
+      </aside>
+    </>
   );
 }

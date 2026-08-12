@@ -1,4 +1,5 @@
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppShell } from "@/components/layout/AppShell";
+import { MenuButton } from "@/components/layout/MenuButton";
 import {
   TopBar,
   NotificationBell,
@@ -13,11 +14,10 @@ import { activeTasks, pinnedNotes, recentNotes } from "@/lib/data";
 
 export default function DashboardPage() {
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-bg">
-      <Sidebar workspaceName="Studio Admin" />
-      <div className="flex min-w-0 flex-1 flex-col">
+    <AppShell workspaceName="Studio Admin">
         <TopBar>
-          <div className="flex flex-1 justify-center">
+          <MenuButton />
+          <div className="hidden flex-1 justify-center md:flex">
             <Input
               icon="search"
               placeholder="Search everything…"
@@ -30,10 +30,10 @@ export default function DashboardPage() {
           <UserAvatar />
         </TopBar>
 
-        <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-5.5">
+        <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-4 sm:p-5.5">
           <div>
             <h1 className="text-[19px] font-bold tracking-tight text-ink">
-              Good evening, "Username"{" "}
+              Good evening, &quot;Username&quot;{" "}
             </h1>
             <p className="mt-0.75 text-[12px] text-muted">
               Here&rsquo;s what&rsquo;s happening in your workspace.
@@ -52,7 +52,7 @@ export default function DashboardPage() {
             <Button>Save Note</Button>
           </div>
 
-          <div className="flex items-stretch gap-3.5">
+          <div className="flex flex-col gap-3.5 md:flex-row md:items-stretch">
             <div className="flex flex-1 flex-col gap-2.75 rounded-xl border border-line bg-surface p-3.5">
               <div className="flex items-center gap-1.75">
                 <PinIcon className="text-accent" />
@@ -129,18 +129,18 @@ export default function DashboardPage() {
             <div className="text-[12.5px] font-semibold text-ink">
               Recent Notes
             </div>
-            <div className="grid grid-cols-[1fr_150px_130px] gap-x-3 gap-y-2 border-b border-line-soft pb-2 text-[9.5px] font-semibold tracking-widest text-faint">
+            <div className="grid grid-cols-[1fr_90px] gap-x-3 gap-y-2 border-b border-line-soft pb-2 text-[9.5px] font-semibold tracking-widest text-faint sm:grid-cols-[1fr_150px_130px]">
               <span>TITLE</span>
-              <span>WORKSPACES</span>
+              <span className="hidden sm:block">WORKSPACES</span>
               <span>UPDATED</span>
             </div>
             {recentNotes.map((note) => (
               <div
                 key={note.id}
-                className="grid grid-cols-[1fr_150px_130px] gap-3 border-b border-line-faint py-1.75 text-[11.5px] text-ink-soft"
+                className="grid grid-cols-[1fr_90px] gap-3 border-b border-line-faint py-1.75 text-[11.5px] text-ink-soft sm:grid-cols-[1fr_150px_130px]"
               >
-                <span className="font-medium">{note.title}</span>
-                <span className="text-muted">{note.space}</span>
+                <span className="truncate font-medium">{note.title}</span>
+                <span className="hidden text-muted sm:block">{note.space}</span>
                 <span className="text-muted">{note.updated}</span>
               </div>
             ))}
@@ -152,7 +152,6 @@ export default function DashboardPage() {
             </a>
           </div>
         </div>
-      </div>
-    </div>
+    </AppShell>
   );
 }

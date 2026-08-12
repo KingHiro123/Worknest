@@ -1,4 +1,4 @@
-import { ChevronDownIcon, PinIcon } from "@/components/ui/icons";
+import { ChevronDownIcon, ChevronLeftIcon, PinIcon } from "@/components/ui/icons";
 import { TagPill } from "@/components/ui/TagPill";
 import { Button } from "@/components/ui/Button";
 import type { Note } from "@/types";
@@ -17,12 +17,24 @@ const TOOLBAR = [
 
 export interface NoteEditorProps {
   note: Note;
+  /** Shows a mobile-only back button that returns to the note list. */
+  onBack?: () => void;
 }
 
-export function NoteEditor({ note }: NoteEditorProps) {
+export function NoteEditor({ note, onBack }: NoteEditorProps) {
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-surface">
       <div className="flex items-start gap-2.5 px-5.5 pt-4">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Back to notes"
+            className="-ml-1 flex-none p-1 text-ink-soft md:hidden"
+          >
+            <ChevronLeftIcon size={17} />
+          </button>
+        )}
         <span className="flex-1 text-[16px] font-bold tracking-tight text-ink">{note.title}</span>
         <span className="text-[13px] tracking-widest text-faint">···</span>
         <PinIcon className="flex-none text-accent" />

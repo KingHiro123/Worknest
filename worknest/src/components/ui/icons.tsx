@@ -142,6 +142,30 @@ export function ArchiveIcon(props: IconProps) {
   );
 }
 
+export function MenuIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" />
+    </Icon>
+  );
+}
+
+export function XIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </Icon>
+  );
+}
+
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10 3 5 8l5 5" />
+    </Icon>
+  );
+}
+
 export function ChevronDownIcon({ className }: { className?: string }) {
   return (
     <span
