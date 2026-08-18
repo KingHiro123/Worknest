@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -33,18 +33,34 @@ export interface BoardsViewProps {
 // drops in the empty gap of an empty column) when nothing contains the pointer.
 const collisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
-  return pointerCollisions.length > 0 ? pointerCollisions : closestCorners(args);
+  return pointerCollisions.length > 0
+    ? pointerCollisions
+    : closestCorners(args);
 };
 
 /** Client-side kanban board: drag cards to reorder within a column or move between columns. */
 export function BoardsView({ initialColumns }: BoardsViewProps) {
   const [columns, setColumns] = useState(initialColumns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 768,
+  );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: isMobile ? 8 : 6 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
+
+  // Track mobile state on resize
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   function columnOfTask(id: UniqueIdentifier) {
     return columns.find((col) => col.tasks.some((task) => task.id === id));
@@ -55,7 +71,9 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
   }
 
   function handleDragStart({ active }: DragStartEvent) {
-    const task = columns.flatMap((col) => col.tasks).find((t) => t.id === active.id);
+    const task = columns
+      .flatMap((col) => col.tasks)
+      .find((t) => t.id === active.id);
     setActiveTask(task ?? null);
   }
 
@@ -103,8 +121,10 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
 
     setColumns((prev) =>
       prev.map((col) =>
-        col.id === fromColumn.id ? { ...col, tasks: arrayMove(col.tasks, oldIndex, newIndex) } : col
-      )
+        col.id === fromColumn.id
+          ? { ...col, tasks: arrayMove(col.tasks, oldIndex, newIndex) }
+          : col,
+      ),
     );
   }
 
@@ -113,6 +133,13 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       id="boards-dnd"
       sensors={sensors}
       collisionDetection={collisionDetection}
+      // Carrying a card near the screen edge auto-scrolls the column carousel on
+      // phone view; a lower acceleration ramps that scroll up more gradually so
+      // crossing into the middle column feels deliberate instead of snappy. This
+      // only affects the horizontal carousel scroll (mobile) and the vertical
+      // task-list scroll for long columns — it never skips or drops a drag-over
+      // event, so it can't cause a drop to be lost like the old throttle did.
+      autoScroll={{ acceleration: isMobile ? 4 : 10 }}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
