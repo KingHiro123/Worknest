@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -12,6 +12,7 @@ import {
   useSensors,
   type CollisionDetection,
   type DragEndEvent,
+  type DragMoveEvent,
   type DragOverEvent,
   type DragStartEvent,
   type UniqueIdentifier,
@@ -45,6 +46,7 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768,
   );
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -77,9 +79,57 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
     setActiveTask(task ?? null);
   }
 
+  // On phone view, columns are a snap carousel where a peeking neighbor can sit
+  // only a few pixels from the column under the pointer, and collision detection
+  // (over) doesn't update on every frame while auto-scroll is carrying the card
+  // toward it. So cross-column assignment there is driven directly by geometry
+  // instead: on every pointer move, find which column's rect actually contains
+  // the dragged card's center and move the card there. This fires far more often
+  // than onDragOver's collision-result-gated updates and can't be fooled by a
+  // nearby-but-not-actually-hovered column.
+  function handleDragMove({ active }: DragMoveEvent) {
+    if (!isMobile) return;
+
+    const activeRect = active.rect.current.translated;
+    const container = scrollContainerRef.current;
+    if (!activeRect || !container) return;
+
+    const centerX = activeRect.left + activeRect.width / 2;
+    const centerY = activeRect.top + activeRect.height / 2;
+
+    let hoveredColumnId: string | null = null;
+    container.querySelectorAll<HTMLElement>("[data-column-id]").forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (centerX >= rect.left && centerX <= rect.right && centerY >= rect.top && centerY <= rect.bottom) {
+        hoveredColumnId = el.dataset.columnId ?? null;
+      }
+    });
+    if (!hoveredColumnId) return;
+
+    const fromColumn = columnOfTask(active.id);
+    if (!fromColumn || fromColumn.id === hoveredColumnId) return;
+
+    setColumns((prev) => {
+      const movingTask = fromColumn.tasks.find((t) => t.id === active.id);
+      if (!movingTask) return prev;
+
+      return prev.map((col) => {
+        if (col.id === fromColumn.id) {
+          return { ...col, tasks: col.tasks.filter((t) => t.id !== active.id) };
+        }
+        if (col.id === hoveredColumnId) {
+          return { ...col, tasks: [...col.tasks, movingTask] };
+        }
+        return col;
+      });
+    });
+  }
+
   // While dragging over a different column, live-move the card so the columns
   // preview the drop as it happens (standard dnd-kit multi-container pattern).
+  // On phone view this is handled by handleDragMove instead (see above).
   function handleDragOver({ active, over }: DragOverEvent) {
+    if (isMobile) return;
     if (!over || active.id === over.id) return;
 
     const fromColumn = columnOfTask(active.id);
@@ -141,10 +191,14 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       // event, so it can't cause a drop to be lost like the old throttle did.
       autoScroll={{ acceleration: isMobile ? 4 : 10 }}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto p-4 sm:p-5.5 md:snap-none">
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto p-4 sm:p-5.5 md:snap-none"
+      >
         {columns.map((column) => (
           <BoardColumn key={column.id} column={column} />
         ))}

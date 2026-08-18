@@ -22,6 +22,7 @@ export function BoardColumn({ column }: BoardColumnProps) {
 
   return (
     <div
+      data-column-id={column.id}
       className={`flex h-full w-[82vw] max-w-80 flex-none snap-center flex-col gap-2.5 rounded-xl border p-3 md:w-auto md:max-w-none md:min-w-0 md:flex-1 ${style}`}
     >
       <div className="flex flex-none items-center px-0.75">
