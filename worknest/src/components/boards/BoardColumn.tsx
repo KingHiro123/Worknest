@@ -13,9 +13,11 @@ const COLUMN_STYLES: Record<string, string> = {
 
 export interface BoardColumnProps {
   column: BoardColumnData;
+  /** True while a card is being dragged and this column is the current drop target. */
+  isDropTarget?: boolean;
 }
 
-export function BoardColumn({ column }: BoardColumnProps) {
+export function BoardColumn({ column, isDropTarget = false }: BoardColumnProps) {
   const { setNodeRef } = useDroppable({ id: column.id });
   const style = COLUMN_STYLES[column.name] ?? "bg-line-faint border-line";
   const taskIds = column.tasks.map((task) => task.id);
@@ -23,7 +25,9 @@ export function BoardColumn({ column }: BoardColumnProps) {
   return (
     <div
       data-column-id={column.id}
-      className={`flex h-full w-[82vw] max-w-80 flex-none snap-center flex-col gap-2.5 rounded-xl border p-3 md:w-auto md:max-w-none md:min-w-0 md:flex-1 ${style}`}
+      className={`flex h-full w-[82vw] max-w-80 flex-none snap-center flex-col gap-2.5 rounded-xl border p-3 transition-shadow md:w-auto md:max-w-none md:min-w-0 md:flex-1 ${style} ${
+        isDropTarget ? "ring-2 ring-accent-strong ring-inset" : ""
+      }`}
     >
       <div className="flex flex-none items-center px-0.75">
         <span className="flex-1 text-[12.5px] font-bold text-ink">{column.name}</span>

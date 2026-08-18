@@ -43,6 +43,7 @@ const collisionDetection: CollisionDetection = (args) => {
 export function BoardsView({ initialColumns }: BoardsViewProps) {
   const [columns, setColumns] = useState(initialColumns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [dropTargetColumnId, setDropTargetColumnId] = useState<UniqueIdentifier | null>(null);
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768,
   );
@@ -77,6 +78,7 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       .flatMap((col) => col.tasks)
       .find((t) => t.id === active.id);
     setActiveTask(task ?? null);
+    setDropTargetColumnId(columnOfTask(active.id)?.id ?? null);
   }
 
   // On phone view, columns are a snap carousel where a peeking neighbor can sit
@@ -105,6 +107,7 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       }
     });
     if (!hoveredColumnId) return;
+    setDropTargetColumnId((prev) => (prev === hoveredColumnId ? prev : hoveredColumnId));
 
     const fromColumn = columnOfTask(active.id);
     if (!fromColumn || fromColumn.id === hoveredColumnId) return;
@@ -130,10 +133,13 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
   // On phone view this is handled by handleDragMove instead (see above).
   function handleDragOver({ active, over }: DragOverEvent) {
     if (isMobile) return;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
     const fromColumn = columnOfTask(active.id);
     const toColumn = columnOfTask(over.id) ?? columnById(over.id);
+    setDropTargetColumnId((toColumn ?? fromColumn)?.id ?? null);
+
+    if (active.id === over.id) return;
     if (!fromColumn || !toColumn || fromColumn.id === toColumn.id) return;
 
     setColumns((prev) => {
@@ -159,6 +165,7 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
   // Finalize ordering within the settled column once the drag is released.
   function handleDragEnd({ active, over }: DragEndEvent) {
     setActiveTask(null);
+    setDropTargetColumnId(null);
     if (!over) return;
 
     const fromColumn = columnOfTask(active.id);
@@ -178,6 +185,11 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
     );
   }
 
+  function handleDragCancel() {
+    setActiveTask(null);
+    setDropTargetColumnId(null);
+  }
+
   return (
     <DndContext
       id="boards-dnd"
@@ -194,13 +206,18 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       onDragMove={handleDragMove}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div
         ref={scrollContainerRef}
         className="flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto p-4 sm:p-5.5 md:snap-none"
       >
         {columns.map((column) => (
-          <BoardColumn key={column.id} column={column} />
+          <BoardColumn
+            key={column.id}
+            column={column}
+            isDropTarget={activeTask !== null && dropTargetColumnId === column.id}
+          />
         ))}
       </div>
       <DragOverlay>
