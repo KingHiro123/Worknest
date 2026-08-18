@@ -229,7 +229,15 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       </div>
       <DragOverlay>
         {activeTask && (
-          <div className="w-[82vw] max-w-80 rotate-2 opacity-90 md:w-72">
+          // Scoped to just this element (not the whole page — see globals.css):
+          // some mobile browsers auto-invert pages that don't opt out of "force
+          // dark," and that repaint is known to corrupt transformed + translucent
+          // elements into garbled diagonal artifacts instead of the actual
+          // content. This card is rotated and semi-transparent (rotate-2
+          // opacity-90), so it's exactly the shape that glitches; opting just
+          // the drag ghost out keeps it rendering as a normal card while leaving
+          // the rest of the app under the browser's own color handling.
+          <div className="w-[82vw] max-w-80 rotate-2 opacity-90 [color-scheme:light] md:w-72">
             <TaskCardContent task={activeTask} />
           </div>
         )}
