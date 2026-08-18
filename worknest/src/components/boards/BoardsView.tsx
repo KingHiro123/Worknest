@@ -113,7 +113,6 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       id="boards-dnd"
       sensors={sensors}
       collisionDetection={collisionDetection}
-      autoScroll={{ threshold: { x: 0, y: 0.2 } }}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
