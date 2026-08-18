@@ -7,8 +7,10 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCorners,
+  pointerWithin,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -22,6 +24,17 @@ import type { BoardColumnData, Task } from "@/types";
 export interface BoardsViewProps {
   initialColumns: BoardColumnData[];
 }
+
+// On phone widths each column nearly fills the viewport and its neighbors peek in
+// at the edges (snap carousel), so their droppable rects sit only a few pixels away
+// from the active column's. closestCorners alone can then match a peeking neighbor
+// instead of the column the pointer is actually over. Require the pointer to be
+// within a droppable first, and only fall back to corner-distance matching (e.g. for
+// drops in the empty gap of an empty column) when nothing contains the pointer.
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  return pointerCollisions.length > 0 ? pointerCollisions : closestCorners(args);
+};
 
 /** Client-side kanban board: drag cards to reorder within a column or move between columns. */
 export function BoardsView({ initialColumns }: BoardsViewProps) {
@@ -99,7 +112,8 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
     <DndContext
       id="boards-dnd"
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetection}
+      autoScroll={{ threshold: { x: 0, y: 0.2 } }}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
