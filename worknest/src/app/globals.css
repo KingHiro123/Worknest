@@ -52,13 +52,6 @@ body {
   height: 100%;
 }
 
-html {
-  /* Belt-and-braces alongside the viewport `colorScheme` meta tag in
-     layout.tsx: this app only has a light palette, so tell browsers not to
-     auto-dark-invert it (a common mobile Chrome/Samsung Internet default). */
-  color-scheme: light;
-}
-
 body {
   background: var(--color-bg);
   color: var(--color-ink);
