@@ -136,6 +136,24 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
     return () => window.removeEventListener("pointermove", handlePointerMove);
   }, [isMobile, activeTask]);
 
+  // On phone view, follow the drag: whichever column is the current drop target
+  // (set above from the real pointer position) gets smoothly recentered in the
+  // carousel, in either direction. This replaces relying on dnd-kit's own
+  // edge-proximity auto-scroll for the horizontal carousel (disabled below via
+  // canScroll) — that edge zone overlapped the peeking neighbor column itself,
+  // which is what caused drags into "Doing" to slide straight through into
+  // "Done" instead of stopping there.
+  useEffect(() => {
+    if (!isMobile || !activeTask || !dropTargetColumnId) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const target = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-column-id]"),
+    ).find((el) => el.dataset.columnId === dropTargetColumnId);
+    target?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [isMobile, activeTask, dropTargetColumnId]);
+
   // While dragging over a different column, live-move the card so the columns
   // preview the drop as it happens (standard dnd-kit multi-container pattern).
   // On phone view this is handled by the pointermove effect above instead.
@@ -203,13 +221,24 @@ export function BoardsView({ initialColumns }: BoardsViewProps) {
       id="boards-dnd"
       sensors={sensors}
       collisionDetection={collisionDetection}
-      // Carrying a card near the screen edge auto-scrolls the column carousel on
-      // phone view; a lower acceleration ramps that scroll up more gradually so
-      // crossing into the middle column feels deliberate instead of snappy. This
-      // only affects the horizontal carousel scroll (mobile) and the vertical
-      // task-list scroll for long columns — it never skips or drops a drag-over
-      // event, so it can't cause a drop to be lost like the old throttle did.
-      autoScroll={{ acceleration: isMobile ? 4 : 10 }}
+      // On phone view, horizontal carousel scrolling is driven deliberately by
+      // the drop-target-column effect above (which recenters whichever column
+      // the pointer is hovering), not by dnd-kit's own edge-proximity
+      // auto-scroll — canScroll below excludes the carousel container from it.
+      // dnd-kit's default edge threshold is 20% of the scroll container's
+      // width per side; on phone view that's wider than the sliver of the next
+      // column peeking in at the edge, so the peeking column's entire visible
+      // area sat inside the auto-scroll hot zone and a card hovered there kept
+      // sliding straight through into the column beyond — exactly why dragging
+      // into "Doing" was landing in "Done" instead. Column vertical task lists
+      // (overflow-y-auto, for long columns) still auto-scroll normally; only
+      // the horizontal carousel container is opted out.
+      autoScroll={{
+        acceleration: isMobile ? 4 : 10,
+        canScroll: isMobile
+          ? (element) => element !== scrollContainerRef.current
+          : undefined,
+      }}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
